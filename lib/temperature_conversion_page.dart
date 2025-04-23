@@ -1,58 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'temperature_provider.dart';
 
-class TemperatureConversionPage extends StatefulWidget {
+class TemperatureConversionPage extends StatelessWidget {
   const TemperatureConversionPage({super.key});
 
   @override
-  _TemperatureConversionPageState createState() => _TemperatureConversionPageState();
-}
-
-class _TemperatureConversionPageState extends State<TemperatureConversionPage> {
-  final TextEditingController temperatureController = TextEditingController();
-  String result = '';
-  String fromUnit = 'Celsius';
-  String toUnit = 'Fahrenheit';
-
-  double convertTemperature(double value, String from, String to) {
-    double celsius;
-
-    switch (from) {
-      case 'Fahrenheit':
-        celsius = (value - 32) * 5 / 9;
-        break;
-      case 'Kelvin':
-        celsius = value - 273.15;
-        break;
-      case 'Reamur':
-        celsius = value * 5 / 4;
-        break;
-      default:
-        celsius = value;
-    }
-
-    switch (to) {
-      case 'Fahrenheit':
-        return (celsius * 9 / 5) + 32;
-      case 'Kelvin':
-        return celsius + 273.15;
-      case 'Reamur':
-        return celsius * 4 / 5;
-      default:
-        return celsius;
-    }
-  }
-
-  void performConversion() {
-    double temperature = double.parse(temperatureController.text);
-    double convertedTemperature = convertTemperature(temperature, fromUnit, toUnit);
-    
-    setState(() {
-      result = '$temperature °$fromUnit = $convertedTemperature °$toUnit';
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<TemperatureProvider>(context);
+    final tempController = TextEditingController();
+
     return Scaffold(
       appBar: AppBar(title: Text('Konversi Suhu')),
       body: Padding(
@@ -63,13 +20,11 @@ class _TemperatureConversionPageState extends State<TemperatureConversionPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 DropdownButton<String>(
-                  value: fromUnit,
+                  value: provider.fromUnit,
                   onChanged: (value) {
-                    setState(() {
-                      fromUnit = value!;
-                      temperatureController.clear();
-                      result = '';
-                    });
+                    if (value != null) {
+                      provider.setFromUnit(value);
+                    }
                   },
                   items: ['Celsius', 'Fahrenheit', 'Kelvin', 'Reamur']
                       .map((unit) => DropdownMenuItem(
@@ -79,13 +34,11 @@ class _TemperatureConversionPageState extends State<TemperatureConversionPage> {
                       .toList(),
                 ),
                 DropdownButton<String>(
-                  value: toUnit,
+                  value: provider.toUnit,
                   onChanged: (value) {
-                    setState(() {
-                      toUnit = value!;
-                      temperatureController.clear();
-                      result = '';
-                    });
+                    if (value != null) {
+                      provider.setToUnit(value);
+                    }
                   },
                   items: ['Celsius', 'Fahrenheit', 'Kelvin', 'Reamur']
                       .map((unit) => DropdownMenuItem(
@@ -98,17 +51,19 @@ class _TemperatureConversionPageState extends State<TemperatureConversionPage> {
             ),
             SizedBox(height: 20),
             TextField(
-              controller: temperatureController,
+              controller: tempController,
               decoration: InputDecoration(labelText: 'Masukkan Suhu'),
               keyboardType: TextInputType.number,
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: performConversion,
+              onPressed: () {
+                provider.convert(tempController.text);
+              },
               child: Text('Konversi'),
             ),
             SizedBox(height: 20),
-            Text(result, style: TextStyle(fontSize: 20)),
+            Text(provider.result, style: TextStyle(fontSize: 20)),
           ],
         ),
       ),
